@@ -494,6 +494,57 @@ input, textarea {
   border-color: var(--line);
 }
 
+.badge.unread-badge {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.badge.pending-badge {
+  background: #fff3ee;
+  color: var(--accent);
+  border-color: var(--accent-soft);
+}
+
+.badge.read-badge {
+  background: #eef3ea;
+  color: #6f8260;
+  border-color: #c8d6bd;
+}
+
+.unread-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-right: 6px;
+  vertical-align: 1px;
+}
+
+.letter-card.unread {
+  border-color: var(--accent-soft);
+  background: #fff6f0;
+}
+
+.letter-card.unread .letter-preview {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.msg-read {
+  margin-left: 6px;
+  font-size: 11px;
+}
+
+.msg-bubble.me .msg-read.read {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.msg-bubble.me .msg-read.pending {
+  color: rgba(255, 255, 255, 0.55);
+}
+
 .loading {
   text-align: center;
   color: var(--muted);

@@ -21,6 +21,8 @@ export default function ThreadPage() {
   const load = async () => {
     setLoading(true);
     try {
+      // Fetching the thread marks letters addressed to me as read,
+      // so the inbox and this page always agree.
       const thread = await LetterApi.thread(id);
       setData(thread);
     } catch (err) {
@@ -39,6 +41,8 @@ export default function ThreadPage() {
     try {
       await LetterApi.reply({ id, content: reply.trim() });
       setReply('');
+      // The new reply arrives unread for the other side; reload so both
+      // the messages and the per-message read state stay consistent.
       load();
     } catch (err) {
       setError(err.message);
@@ -56,8 +60,19 @@ export default function ThreadPage() {
     }
   };
 
+  const markUnread = async () => {
+    try {
+      await LetterApi.markUnread(id);
+      navigate('/inbox');
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   if (loading) return <div className="loading">加载对话中…</div>;
   if (!data) return <div className="empty-state">{error || '无法加载对话'}</div>;
+
+  const skipped = data.status === 'skipped';
 
   return (
     <div className="thread-wrap">
@@ -70,10 +85,19 @@ export default function ThreadPage() {
           >
             {data.favorited ? `★ ${LABELS.UNFAVORITE}` : `☆ ${LABELS.FAVORITE}`}
           </button>
+          {!skipped && (
+            <button
+              className="icon-btn"
+              style={{ marginLeft: 8 }}
+              onClick={markUnread}
+            >
+              {LABELS.MARK_UNREAD}
+            </button>
+          )}
           <button
             className="icon-btn"
             style={{ marginLeft: 8 }}
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/inbox')}
           >
             {LABELS.BACK}
           </button>
@@ -84,7 +108,14 @@ export default function ThreadPage() {
         {data.messages.map((m) => (
           <div key={m.id} className={`msg-bubble ${m.fromMe ? 'me' : 'them'}`}>
             <div>{m.content}</div>
-            <div className="msg-time">{formatTime(m.createdAt)}</div>
+            <div className="msg-time">
+              {formatTime(m.createdAt)}
+              {m.fromMe && !skipped && (
+                <span className={`msg-read ${m.read ? 'read' : 'pending'}`}>
+                  · {m.read ? LABELS.MESSAGE_READ : LABELS.MESSAGE_UNREAD}
+                </span>
+              )}
+            </div>
           </div>
         ))}
       </div>

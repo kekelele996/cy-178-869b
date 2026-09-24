@@ -67,6 +67,20 @@ router.post('/:id/favorite', (req, res) => {
   });
 });
 
+router.post('/:id/unread', (req, res) => {
+  try {
+    LetterService.markThreadUnread({
+      userId: req.user.id,
+      rootId: Number(req.params.id)
+    });
+    res.json({ message: MESSAGES.MARKED_UNREAD, unread: true });
+  } catch (err) {
+    const status =
+      err.code === 'NOT_FOUND' ? 404 : err.code === 'FORBIDDEN' ? 403 : 500;
+    res.status(status).json({ error: err.message });
+  }
+});
+
 router.get('/:id/thread', (req, res) => {
   try {
     const thread = LetterService.getThread({

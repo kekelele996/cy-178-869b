@@ -15,12 +15,26 @@ function formatTime(ts) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-function LetterCard({ item, onOpen, onToggleFavorite, onSkip }) {
-  const statusClass = item.status === 'skipped' ? 'badge skipped' : 'badge';
+function LetterCard({ item, onOpen, onToggleFavorite, onSkip, onMarkUnread }) {
+  const skipped = item.status === 'skipped';
+  const statusClass = skipped ? 'badge skipped' : 'badge';
+  // Letters addressed to me that wait for an answer; skipped threads
+  // and letters I sent never carry this flag.
+  const showUnread = item.unread;
+  // On threads I started or write in, show whether the other traveler
+  // has opened my letter(s).
+  const showPendingRead = !skipped && item.pendingRead;
+  const showRead =
+    !skipped && !item.pendingRead && (item.role === 'sent' || item.role === 'either');
+
   return (
-    <div className="letter-card" onClick={() => onOpen(item.id)}>
+    <div
+      className={`letter-card ${showUnread ? 'unread' : ''}`}
+      onClick={() => onOpen(item.id)}
+    >
       <div className="letter-meta">
         <span>
+          {showUnread && <span className="unread-dot" title={LABELS.UNREAD} />}
           {item.role === 'sent' ? LABELS.SENT_FROM_ME : LABELS.SENT_FROM_STRANGER}
           {item.replyCount > 0 ? ` · ${item.replyCount} 封回信` : ''}
         </span>
@@ -30,6 +44,24 @@ function LetterCard({ item, onOpen, onToggleFavorite, onSkip }) {
             <>
               {' '}
               <span className={statusClass}>{STATUS_TEXT[item.status]}</span>
+            </>
+          )}
+          {showUnread && (
+            <>
+              {' '}
+              <span className="badge unread-badge">{LABELS.UNREAD}</span>
+            </>
+          )}
+          {!showUnread && showPendingRead && (
+            <>
+              {' '}
+              <span className="badge pending-badge">{LABELS.PENDING_READ}</span>
+            </>
+          )}
+          {!showUnread && showRead && (
+            <>
+              {' '}
+              <span className="badge read-badge">{LABELS.READ}</span>
             </>
           )}
         </span>
@@ -42,7 +74,12 @@ function LetterCard({ item, onOpen, onToggleFavorite, onSkip }) {
         >
           {item.favorited ? `★ ${LABELS.UNFAVORITE}` : `☆ ${LABELS.FAVORITE}`}
         </button>
-        {item.role === 'received' && item.status !== 'skipped' && item.replyCount === 0 && (
+        {!(item.role === 'sent' && item.replyCount === 0) && !skipped && (
+          <button className="icon-btn" onClick={() => onMarkUnread(item.id)}>
+            {LABELS.MARK_UNREAD}
+          </button>
+        )}
+        {item.role === 'received' && !skipped && item.replyCount === 0 && (
           <button className="icon-btn" onClick={() => onSkip(item.id)}>
             {LABELS.SKIP}
           </button>
@@ -90,6 +127,15 @@ export default function InboxPage() {
     }
   };
 
+  const markUnread = async (id) => {
+    try {
+      await LetterApi.markUnread(id);
+      refresh();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const list = data[tab] || [];
 
   const emptyText = useMemo(() => {
@@ -124,6 +170,7 @@ export default function InboxPage() {
               onOpen={(id) => navigate(`/thread/${id}`)}
               onToggleFavorite={toggleFavorite}
               onSkip={skip}
+              onMarkUnread={markUnread}
             />
           ))}
         </div>

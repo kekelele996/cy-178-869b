@@ -28,6 +28,11 @@ module.exports = {
     REPLIED: 'replied'
   },
 
+  READ_STATUS: {
+    UNREAD: 'unread',
+    READ: 'read'
+  },
+
   ROLES: {
     SENDER: 'sender',
     RECEIVER: 'receiver'
@@ -51,6 +56,9 @@ module.exports = {
     FAVORITED: '已收藏',
     UNFAVORITED: '已取消收藏',
     SKIPPED: '已跳过这封信',
-    REPLIED: '回复已送达'
+    REPLIED: '回复已送达',
+    MARKED_UNREAD: '已标为未读',
+    MARKED_READ: '已标为已读',
+    READ_STATE_UNAVAILABLE: '这封信不参与已读状态'
   }
 };
