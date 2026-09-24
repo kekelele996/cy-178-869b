@@ -91,15 +91,23 @@ const LetterService = {
       FavoriteModel.listByUser(userId).map((l) => l.id)
     );
     const decorate = (list, role) =>
-      list.map((l) => ({
-        id: l.id,
-        preview: l.content.slice(0, 80),
-        status: l.status,
-        createdAt: l.created_at,
-        replyCount: l.reply_count,
-        role,
-        favorited: favorites.has(l.id)
-      }));
+      list.map((l) => {
+        // Skipped (terminated) letters do not take part in read state
+        const skipped = l.status === LETTER_STATUS.SKIPPED;
+        return {
+          id: l.id,
+          preview: l.content.slice(0, 80),
+          status: l.status,
+          createdAt: l.created_at,
+          replyCount: l.reply_count,
+          role,
+          favorited: favorites.has(l.id),
+          unreadCount: skipped ? 0 : l.unread_count,
+          peerUnreadCount: skipped ? 0 : l.peer_unread_count,
+          hasIncoming: !skipped && l.incoming_count > 0,
+          hasOutgoing: !skipped && l.outgoing_count > 0
+        };
+      });
     return {
       sent: decorate(rawSent, 'sent'),
       received: decorate(rawReceived, 'received'),
@@ -120,17 +128,40 @@ const LetterService = {
       err.code = 'FORBIDDEN';
       throw err;
     }
+    // Opening the conversation marks everything written to me as read;
+    // skipped (terminated) letters stay out of read state entirely.
+    if (first.status !== LETTER_STATUS.SKIPPED) {
+      LetterModel.markThreadRead({ rootId, userId, readAt: Date.now() });
+    }
     const me = userId;
     return {
       rootId,
+      status: first.status,
       favorited: FavoriteModel.exists({ userId, letterId: rootId }),
-      messages: thread.map((m) => ({
+      messages: LetterModel.listThread(rootId).map((m) => ({
         id: m.id,
         content: m.content,
         createdAt: m.created_at,
-        fromMe: m.sender_id === me
+        fromMe: m.sender_id === me,
+        readAt: m.read_at || null
       }))
     };
+  },
+
+  markUnread({ userId, rootId }) {
+    const root = LetterModel.findById(rootId);
+    if (!root) {
+      const err = new Error(MESSAGES.LETTER_NOT_FOUND);
+      err.code = 'NOT_FOUND';
+      throw err;
+    }
+    if (root.sender_id !== userId && root.receiver_id !== userId) {
+      const err = new Error(MESSAGES.NOT_YOUR_LETTER);
+      err.code = 'FORBIDDEN';
+      throw err;
+    }
+    LetterModel.markThreadUnread({ rootId, userId });
+    return true;
   }
 };
 

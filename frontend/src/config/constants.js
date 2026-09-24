@@ -16,6 +16,7 @@ export const ENDPOINTS = {
   REPLY_LETTER: (id) => `${API_BASE}/api/letters/${id}/reply`,
   SKIP_LETTER: (id) => `${API_BASE}/api/letters/${id}/skip`,
   FAVORITE_LETTER: (id) => `${API_BASE}/api/letters/${id}/favorite`,
+  MARK_UNREAD_LETTER: (id) => `${API_BASE}/api/letters/${id}/mark-unread`,
   THREAD: (id) => `${API_BASE}/api/letters/${id}/thread`,
   INBOX: `${API_BASE}/api/inbox`
 };
@@ -64,7 +65,11 @@ export const LABELS = {
   REPLY_PLACEHOLDER: '回信给这位陌生人……',
   SUBMIT_REPLY: '寄出回复',
   SENT_FROM_ME: '我寄出',
-  SENT_FROM_STRANGER: '陌生人'
+  SENT_FROM_STRANGER: '陌生人',
+  UNREAD: '未读',
+  PEER_READ: '已读',
+  PEER_UNREAD: '待读',
+  MARK_UNREAD: '标为未读'
 };
 
 export const STATUS_TEXT = {

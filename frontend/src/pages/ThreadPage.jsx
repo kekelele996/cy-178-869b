@@ -84,7 +84,14 @@ export default function ThreadPage() {
         {data.messages.map((m) => (
           <div key={m.id} className={`msg-bubble ${m.fromMe ? 'me' : 'them'}`}>
             <div>{m.content}</div>
-            <div className="msg-time">{formatTime(m.createdAt)}</div>
+            <div className="msg-time">
+              {m.fromMe && data.status !== 'skipped' && (
+                <span className="read-state">
+                  {m.readAt ? LABELS.PEER_READ : LABELS.PEER_UNREAD} ·{' '}
+                </span>
+              )}
+              {formatTime(m.createdAt)}
+            </div>
           </div>
         ))}
       </div>

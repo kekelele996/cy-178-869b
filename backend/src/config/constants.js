@@ -51,6 +51,7 @@ module.exports = {
     FAVORITED: '已收藏',
     UNFAVORITED: '已取消收藏',
     SKIPPED: '已跳过这封信',
-    REPLIED: '回复已送达'
+    REPLIED: '回复已送达',
+    MARKED_UNREAD: '已标为未读'
   }
 };

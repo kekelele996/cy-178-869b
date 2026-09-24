@@ -15,7 +15,7 @@ function formatTime(ts) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-function LetterCard({ item, onOpen, onToggleFavorite, onSkip }) {
+function LetterCard({ item, onOpen, onToggleFavorite, onSkip, onMarkUnread }) {
   const statusClass = item.status === 'skipped' ? 'badge skipped' : 'badge';
   return (
     <div className="letter-card" onClick={() => onOpen(item.id)}>
@@ -23,9 +23,26 @@ function LetterCard({ item, onOpen, onToggleFavorite, onSkip }) {
         <span>
           {item.role === 'sent' ? LABELS.SENT_FROM_ME : LABELS.SENT_FROM_STRANGER}
           {item.replyCount > 0 ? ` · ${item.replyCount} 封回信` : ''}
+          {item.unreadCount > 0 && (
+            <>
+              {' '}
+              <span className="badge unread">
+                {LABELS.UNREAD}
+                {item.unreadCount > 1 ? ` ${item.unreadCount}` : ''}
+              </span>
+            </>
+          )}
         </span>
         <span>
           {formatTime(item.createdAt)}
+          {item.hasOutgoing && (
+            <>
+              {' '}
+              <span className={`badge ${item.peerUnreadCount > 0 ? '' : 'read'}`}>
+                {item.peerUnreadCount > 0 ? LABELS.PEER_UNREAD : LABELS.PEER_READ}
+              </span>
+            </>
+          )}
           {item.status && item.status !== 'delivered' && item.status !== 'pending' && (
             <>
               {' '}
@@ -45,6 +62,11 @@ function LetterCard({ item, onOpen, onToggleFavorite, onSkip }) {
         {item.role === 'received' && item.status !== 'skipped' && item.replyCount === 0 && (
           <button className="icon-btn" onClick={() => onSkip(item.id)}>
             {LABELS.SKIP}
+          </button>
+        )}
+        {item.hasIncoming && item.unreadCount === 0 && (
+          <button className="icon-btn" onClick={() => onMarkUnread(item.id)}>
+            {LABELS.MARK_UNREAD}
           </button>
         )}
       </div>
@@ -90,6 +112,15 @@ export default function InboxPage() {
     }
   };
 
+  const markUnread = async (id) => {
+    try {
+      await LetterApi.markUnread(id);
+      refresh();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const list = data[tab] || [];
 
   const emptyText = useMemo(() => {
@@ -124,6 +155,7 @@ export default function InboxPage() {
               onOpen={(id) => navigate(`/thread/${id}`)}
               onToggleFavorite={toggleFavorite}
               onSkip={skip}
+              onMarkUnread={markUnread}
             />
           ))}
         </div>

@@ -47,4 +47,10 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_letters_parent ON letters(parent_id);
 `);
 
+// Migration: per-recipient read state on each letter (NULL = unread)
+const letterColumns = db.prepare('PRAGMA table_info(letters)').all();
+if (!letterColumns.some((c) => c.name === 'read_at')) {
+  db.exec('ALTER TABLE letters ADD COLUMN read_at INTEGER');
+}
+
 module.exports = db;

@@ -20,6 +20,9 @@ export const LetterApi = {
   toggleFavorite(id) {
     return api.request(ENDPOINTS.FAVORITE_LETTER(id), { method: 'POST' });
   },
+  markUnread(id) {
+    return api.request(ENDPOINTS.MARK_UNREAD_LETTER(id), { method: 'POST' });
+  },
   thread(id) {
     return api.request(ENDPOINTS.THREAD(id));
   },
